@@ -6,17 +6,21 @@ from collections import defaultdict
 # Initialize data structures to store player tracking information
 player_positions = defaultdict(list)  # Tracks positions for each player ID
 player_distances = defaultdict(float)  # Accumulated distances for each player ID
+player_velocities = defaultdict(list)  # Tracks velocities for each player ID
 player_accelerations = defaultdict(list)  # Tracks accelerations for each player ID
 
-def update_distances(resultsTracker, pixel_to_meter):
+def update_distances(resultsTracker, pixel_to_meter, fps):
     """
-    Update distances and accelerations for each tracked player ID using the current frame's tracker results.
+    Update distances, velocities, and accelerations for each tracked player ID using the current frame's tracker results.
 
     Args:
         resultsTracker (list): List of tracked object data [x1, y1, x2, y2, track_id].
         pixel_to_meter (float): Conversion factor from pixels to meters.
+        fps (float): Frames per second of the video.
     """
-    global player_positions, player_distances, player_accelerations
+    global player_positions, player_distances, player_velocities, player_accelerations
+
+    time_interval = 1 / fps  # Time interval per frame in seconds
 
     for result in resultsTracker:
         x1, y1, x2, y2, track_id = map(int, result)
@@ -28,12 +32,14 @@ def update_distances(resultsTracker, pixel_to_meter):
             distance = euclidean(prev_center, center) * pixel_to_meter  # Convert distance to meters
             player_distances[track_id] += distance
             
-            # Calculate acceleration if there are at least two previous positions
-            if len(player_positions[track_id]) > 1:
-                prev_distance = euclidean(player_positions[track_id][-2], prev_center) * pixel_to_meter
-                current_speed = distance
-                prev_speed = prev_distance
-                acceleration = (current_speed - prev_speed)
+            # Calculate velocity (in meters per second)
+            current_velocity = distance / time_interval
+            player_velocities[track_id].append(current_velocity)
+
+            # Calculate acceleration if there are at least two velocities
+            if len(player_velocities[track_id]) > 1:
+                prev_velocity = player_velocities[track_id][-2]
+                acceleration = (current_velocity - prev_velocity) / time_interval  # a = (v_f - v_i) / t
                 player_accelerations[track_id].append(acceleration)
         
         player_positions[track_id].append(center)
@@ -47,7 +53,7 @@ def save_to_csv(fps, pixel_to_meter, output_csv="player_data.csv"):
         pixel_to_meter (float): Conversion factor from pixels to meters.
         output_csv (str): The path to the output CSV file.
     """
-    global player_positions, player_distances, player_accelerations
+    global player_positions, player_distances, player_velocities, player_accelerations
     
     player_data = []
     
@@ -55,7 +61,7 @@ def save_to_csv(fps, pixel_to_meter, output_csv="player_data.csv"):
         total_distance = player_distances[track_id]  # Already in meters
         frames_tracked = len(positions)
         avg_speed = (total_distance / frames_tracked) * fps if frames_tracked > 0 else 0  # Speed in m/s
-        avg_acceleration = (np.mean(player_accelerations[track_id]) if player_accelerations[track_id] else 0)  # Avg acceleration in m/s²
+        avg_acceleration = np.mean(player_accelerations[track_id]) if player_accelerations[track_id] else 0  # Avg acceleration in m/s²
         positional_points = positions  # List of positional points
         player_data.append([track_id, total_distance, avg_speed, avg_acceleration, positional_points])
     
