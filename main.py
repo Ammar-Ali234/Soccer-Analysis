@@ -11,7 +11,7 @@ cap = cv2.VideoCapture(video_path)
 #fps = int(cap.get(cv2.CAP_PROP_FPS))  # Extract frame rate from the video
 pixel_to_meter = 0.05  # Example: 1 pixel = 0.05 meters (adjust based on your setup)
 
-Tracker = Sort(max_age=1000, min_hits=8, iou_threshold=0.025)
+Tracker = Sort(max_age=1000, min_hits=8, iou_threshold=0.00125)
 
 if not cap.isOpened():
     print("Error: Could not open video file.")
@@ -22,15 +22,16 @@ fourcc = cv2.VideoWriter_fourcc(*"mp4v")
 fps = int(cap.get(cv2.CAP_PROP_FPS))
 frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
 frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-out = cv2.VideoWriter(output_path, fourcc, fps, (frame_width, frame_height))
+# frame_height = int(frame_height / 2)
+# frame_width = int(frame_width / 2)
+out = cv2.VideoWriter(output_path, fourcc, fps, (640, 480))
 
 while True:
     ret, frame = cap.read()
     if not ret:
         break
-    frame = cv2.resize(frame, (640, 480))
+    frame = cv2.resize(frame, (640,480))
     results = model(frame)
-
     detections = np.empty((0, 5))  
 
     for result in results:
