@@ -11,7 +11,7 @@ cap = cv2.VideoCapture(video_path)
 #fps = int(cap.get(cv2.CAP_PROP_FPS))  # Extract frame rate from the video
 pixel_to_meter = 0.05  # Example: 1 pixel = 0.05 meters (adjust based on your setup)
 
-Tracker = Sort(max_age=200, min_hits=2, iou_threshold=0.05)
+Tracker = Sort(max_age=1000, min_hits=8, iou_threshold=0.025)
 
 if not cap.isOpened():
     print("Error: Could not open video file.")
@@ -28,7 +28,7 @@ while True:
     ret, frame = cap.read()
     if not ret:
         break
-
+    frame = cv2.resize(frame, (640, 480))
     results = model(frame)
 
     detections = np.empty((0, 5))  
@@ -52,7 +52,7 @@ while True:
         cv2.putText(frame, f"ID: {track_id}", (x1, y1 - 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 4)
 
     out.write(frame)
-    #cv2.imshow("YOLO Detection", frame)
+    cv2.imshow("YOLO Detection", frame)
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
