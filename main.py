@@ -1,4 +1,4 @@
-# main.py
+# main.py main file
 from ultralytics import YOLO
 import cv2
 import numpy as np
