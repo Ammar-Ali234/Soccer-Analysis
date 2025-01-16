@@ -1,5 +1,5 @@
 ![Project Banner](project_banner.png)  
-*Above image shows the visual tracking of players during a football game.*
+*Above image shows the key attributes/features of this project.*
 # Football Player Tracking System
 
 This project implements a **Football Player Tracking System** using state-of-the-art computer vision techniques. The system leverages the **YOLO11 model** for detecting players in video frames and tracks their movements over time.
